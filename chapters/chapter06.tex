@@ -1,0 +1,72 @@
+\section{SQL Data Definition and Data Types}
+\textit{SQL} uses specific terms to talk about formal relational model terms:
+\begin{itemize}
+    \item \textit{Table} $\rightarrow$ \textit{Relation};
+    \item \textit{Row} $\rightarrow$ \textit{Tuple};
+    \item \textit{Column} $\rightarrow$ \textit{Attribute}.
+\end{itemize}
+One of the main \textit{SQL} command is \textbf{CREATE} with this you can create \textit{schemas}, \textit{tables}, \textit{types}, \textit{domains}, \textit{views}, \textit{assertions} and triggers.
+\subsection{Schema and Catalog Concepts in SQL}
+Before \textit{SQL2} the concept of a relational database schema wasn't include, all the table were in the same schema.
+An \textit{SQL} schema is identified by a schema name and includes an authorization identifier, as well as descriptors for each element in the schema. Schema elements include \textit{tables}, \textit{types}, \textit{constraints}, \textit{views}, \textit{domains}, etc.
+We use the command \textbf{CREATE SCHEMA}, which can include all the schema elements definitions, to create a schema\footnote{Note that each statement in SQL ends with a semicolon.}. A catalog correspond to a named collection of schema.
+\subsection{The CREATE TABLE Command in SQL}
+The \textbf{CREATE TABLE} command is used to specify a new relation by giving it a name and specifying its attributes and initial constraints. The attributes are specified first, and each attribute is given a name, a data type to specify its domain of values, and possibly attribute constraints (e.g \textbf{NOT NULL}). The key, entity integrity, and referential integrity constraints can be specified to, or can be added later\footnote{See next chapter.}. Typically, we implicitly tell the schema in which the relation will be created but it can also be implicit. \textbf{CREATE TABLE (SCHEMA\_NAME.)TABLE\_NAME}.
+
+Base tables\footnote{different of \textbf{virtual tables}, see next chapter}, relation created through \textbf{CREATE TABLE}, are created and stored, with these actual rows, as a file by the DBMS.
+
+Note that foreign key can make errors because of circular references or refers a table that didn't exist that can be corrected with the command \textbf{ALTER TABLE}.
+\subsection{Attribute Data Types and Domains in SQL}
+There are different basic type in \textit{SQL}:
+\begin{itemize}
+    \item \textbf{Numeric};
+    \item \textbf{Character-string};
+    \item \textbf{Bit-string};
+    \item \textbf{Boolean};
+    \item \textbf{Date}, \textbf{Time}, \textbf{Timestamp} (special type of string $\rightarrow$ easy cast for comparison).
+\end{itemize}
+ You can create your own type with the command \textbf{CREATE TYPE}.
+\section{Specifying Constraints in SQL}
+\subsection{Specifying Attribute Constraints and Attribute Defaults}
+\textit{SQL} allows \textbf{NULL} so the first constraint is to restrict the utilization of \textbf{NULL} on attributes that can't be null(Implicit on the primary key). If a \textbf{NULL} value appears it can be changed by a default value: \textbf{NAME TYPE NOT NULL DEFAULT NEW$\_$VALUE}. Other type of constraints can be checked with \textbf{CHECK}(Boolean). It can also be used with \textbf{CREATE DOMAIN} statement. 
+\subsection{Specifying Key and Referential Integrity Constraints}
+There are specific clauses in \textbf{CREATE TABLE} to specify constraints on keys and referential integrity. The \textbf{PRIMARY KEY} clause specifies one or more attributes that make up the primary key of a relation. The \textbf{UNIQUE} clause specifies alternate (unique) keys, also known as candidate keys. Referential integrity is specified via the \textbf{FOREIGN KEY} clause a referential integrity constraint can be violated when tuples are inserted or deleted, or when a foreign key or primary key attribute value is updated. The default action that \textit{SQL} takes for an integrity violation is to reject the update operation that will cause a violation, which is known as the \textbf{RESTRICT} option. However, the schema designer can specify an alternative action to be taken by attaching a referential triggered action clause to any foreign key constraint. Other options are\textbf{SET NULL}, \textbf{CASCADE} (delete referencing tuples), \textbf{SET DEFAULT}, \textbf{ON DELETE} and \textbf{ON UPDATE}.
+\subsection{Giving Names to Constraints}
+The name is following the \textbf{CONSTRAINT} statement and must be unique. But it's optional.
+\subsection{Specifying Constraints on Tuples Using CHECK}
+Other table constraints can be added at the end of \textbf{CREATE TABLE} by adding \textbf{CHECK}, they are row-based constraints (apply on each row independently), that check each row when something is add or updated.
+\section{Basic Retrieval Queries in SQL}
+The basic statement to find information is the statement \textbf{SELECT}.
+\textit{SQL} allow a table to have two or more identical tuples. Hence, in general, an \textit{SQL} table is not a set of tuples (because a set does not allow two identical members), rather, it is a multiset of tuples. Some \textit{SQL} relations are constrained to be sets because a key constraint has been declared or because the \textbf{DISTINCT} option has been used with the \textbf{SELECT} statement.
+\subsection{The SELECT-FROM-WHERE Structure of Basic SQL Queries}
+The basic aspect of an \textit{SQL} request is: \textbf{SELECT} $<$attribute list$>$ (called projection attributes) \textbf{FROM} $<$table list$>$ \textbf{WHERE} $<$condition$>$(called selection/join attributes);\footnote{Not equal in \textit{SQL} is "$<>$"} If there is no \textbf{WHERE} it test all the possible choices (corss product). 
+\subsection{Ambiguous Attribute Names, Aliasing, Renaming, and Tuple Variables}
+It is possible that different attributes has the same name if they are not in the same table, so we must qualify the attribute name bu prefixing the table of reference: \textbf{TABLE.ATTRIBUTE$\_$NAME}. Ambiguity can also append where we use the same relation multiple time in a single request, the solution is to rename the relation with \textbf{AS}: ... \textbf{FROM RELATION AS NEW$\_$NAME1, RELATION AS NEW$\_$NAME2 WHERE} ...
+\subsection{Unspecified WHERE Clause and Use of the Asterisk}
+If we want all attributes for a specific relation, we put * in the \textbf{SELECT statement}.
+\subsection{Tables as Sets in SQL}
+As we mentioned earlier, \textit{SQL} usually treats a table not as a set but rather as a multiset as duplicate tuples can appear more than once in a table, and in the result of a query. If we do want to eliminate duplicate tuples from the result of an \textit{SQL} query, we use the keyword \textbf{DISTINCT} in the \textbf{SELECT} clause. There are some operations on sets: \textbf{UNION}, \textbf{EXCEPT} and \textbf{INTERSECT}. Duplicate states are deleted in their results.
+\subsection{Substring Pattern Matching and Arithmetic Operators}
+You can use \textbf{LIKE} to make pattern matching. \% replaces an arbitrary number of zero or more characters, and the underscore replaces a single character.
+\subsection{Ordering of Query Results}
+\textit{SQL} allows the user to order the tuples in the result of a query by the values of one or more of the attributes that appear in the query result, by using the \textbf{ORDER BY} clause. Default value: ascending order of value, you can use \textbf{ASC} or \textbf{DESC} to change it.
+\subsection{Discussion and Summary of Basic SQL Retrieval Queries}
+\textbf{SELECT} $<$attribute list$>$
+\textbf{FROM} $<$table list$>$ 
+[ \textbf{WHERE} $<$condition$>$ ]
+[ \textbf{ORDER BY} $<$attribute list$>$ ];
+\section{INSERT, DELETE, and UPDATE Statements in SQL}
+\subsection{The INSERT Command}
+This is used to add a tuple in a relation. \textbf{INSERT INTO} table \textbf{VALUE} tuple (in the same order as define in the table).
+We can also tell explicitly what we want to fill, the rest will be \textbf{NULL} or default value.
+A DBMS that fully implements SQL should support and enforce all the integrity constraints that can be specified in the DDL
+\subsection{The DELETE Command}
+This is used to delete row in a relation. \textbf{DELETE FROM} table \textbf{WHERE} condition;
+\subsection{The UPDATE Command}
+This is used to update row in a relation. \textbf{UPDATE} table \textbf{SET} changements \textbf{WHERE} condition;
+\section{Additional Features of SQL}
+Not really interesting in my opinion.
+\section{Summary}
+\textit{SQL} is designed to be a comprehensive language that includes statements for data definition, queries, updates, constraint specification, and view definition. We discussed the following features of \textit{SQL} in this chapter: the data definition commands for creating tables, \textit{SQL} basic data types, commands for constraint specification, simple retrieval queries, and database update commands.
+
+ 

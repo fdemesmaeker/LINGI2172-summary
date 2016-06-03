@@ -1,0 +1,157 @@
+\section{Two-Phase Locking Techniques}
+A lock is associated with each data item to control the access by concurrent transactions.
+
+\subsection{Types of Locks and System Lock Tables}
+\begin{description}
+    \item [Binary locks:] Simple but too restrictive.\\
+        2 states: locked (1) or unlocked (0).\\
+        2 operations that can be called by a transaction: \texttt{lock\_item(X)} and \texttt{unlock\_item(X)}.\\
+            lock\_item(X): if LOCK(X)=1, wait until LOCK(X)=0 (by putting the transaction in the waiting queue of item X). If LOCK(X)=0, then set LOCK(X)=1.\\
+        Note that no interleaving should be allowed while these methods run.\\
+        
+        A \textbf{lock table} contains all the items that are locked. Each lock can be represented by the locked item, the locking transaction and a waiting queue containing transactions.
+        
+        Each transaction has to:
+        \begin{itemize}
+            \item call \texttt{lock\_item} before any read and write operation
+            \item call \texttt{unlock\_item} after all read and write operations are completed in the transaction
+            \item don't call \texttt{lock\_item} if already holds the lock
+            \item don't call \texttt{unlock\_item} if it doesn't hold the lock
+        \end{itemize}
+        
+        
+    \item [Shared/Exclusive (or Read/Write) Locks:] More general. Read operations on the same item by different transactions are not conflicting. So we should allow several transactions to access the same item X if they all access X for reading purposes only.\\
+    3 states: read-locked (=share-locked), write-locked (=exclusive-locked), or unlocked.\\
+    3 operations: \texttt{read\_lock(X)}, \texttt{write\_lock(X)} and \texttt{unlock(X)}. Again, no interleaving is allowed.\\
+    
+    Implementation: the records of the lock table are of the form $<$Data\_item\_name, LOCK (read-locked or write-locked), Number\_of\_reads, locking\_transactions (a list)$>$. Unlock a read-locked lock only if Number\_of\_reads is 0.\\
+    
+    A transaction must call \texttt{write\_lock} if it performs a write operation and can call either \texttt{read\_lock} or \texttt{write\_lock} if it performs a read. But a transaction can't lock an item it already holds.
+    
+    \item [Conversion (Upgrading, Downgrading) of Locks:] A lock can be upgraded from read-locked to write-locked (by calling \texttt{write\_lock(X)}) if it is the only transaction holding the lock, otherwise the transaction must wait. A lock can be downgraded from write-locked to read-locked (by calling \texttt{read\_lock(X)}). This is why locking\_transactions is used in the lock table.
+\end{description}
+
+\subsection{Two-Phase Locking (2PL): Guarantees Serializability}
+All locking operations precede the first unlock in the transaction.
+
+2 phases: growing phase (new locks are acquired) and shrinking phase (locks are released).
+
+If every transaction in a schedule follows the two-phase locking protocol, then the schedule is guaranteed to be serializable. A transaction schedule is serializable if its outcome is equal to the outcome of its transactions executed serially (sequentially without overlapping in time). This protocol limits the amount of concurrency that can occur in a schedule.\\
+
+Variations of 2PL:
+\begin{description}
+    \item[conservative 2PL:] a transaction should lock all the items it accesses before the transaction begins its execution. It is a deadlock-free protocol but difficult to use in practice.
+    \item[strict 2PL:] a transaction does not release any of its exclusive (write) locks before it terminates. Not deadlock-free.
+    \item[rigorous 2PL:] a transaction does not release any of its locks (exclusive or shared) before it terminates.
+\end{description}
+
+\subsection{Dealing with Deadlock and Starvation}
+Deadlock: each transaction is waiting for an item locked by another transaction.
+
+Deadlock prevention protocols:
+\begin{itemize}
+    \item Every transaction lock all the items it needs in advance (used in conservative 2PL). Lock all the items or wait with no item locked.
+    \item \textbf{Wait-die:} If TS(T1) $<$ TS(T2), then T1 is allowed to wait; otherwise (T1 younger than T2) abort T1 (T1 dies) and restart it later with the same timestamp.
+    \item \textbf{Wound-wait:} If TS(T1) $<$ TS(T2), then abort T2 (T1 wounds T2) and restart it later with the same timestamp; otherwise (T1 younger than T2) T1 is allowed to wait.
+    \item \textbf{No waiting algorithm:} if a transaction is unable to obtain a lock, it is immediately aborted and then restarted after a certain time delay.
+    \item \textbf{Cautious waiting algorithm:} If T2 is not blocked (not waiting), then T1 is blocked and allowed to wait; otherwise abort T1.
+\end{itemize}
+
+Deadlock detection (alternative to prevention protocols):\\
+\begin{description}
+    \item[Wait-for graph:] 1 node/executing transaction, edge if a transaction is waiting for an item locked by another transaction. Deadlock if cycle in the graph. Abort some of the transactions in the cycle --$>$ Victim selection: better to choose younger transactions. 
+    \item[Timeouts:] abort transaction if waiting for too long.
+\end{description}
+
+To avoid starvation: use a first-come-first-served queue, or higher priority to transactions waiting for a long time or being frequently aborted. Wait-die and wound-wai avoid starvation, because they restart an aborted transaction with its same timestamp.
+
+\section{Concurrency Control Based on Timestamp Ordering}
+Concurrency control techniques based on timestamp ordering do not use locks, so deadlocks cannot occur. The schedule is serializable. Tnterleavings of transaction operations are allowed, but for each pair of conflicting operations in the schedule, the order in which the item is accessed must follow the timestamp order. Each item X is associated with two values: read\_TS(X), the timestamp of the last transaction that read X, and write\_TX(X), the timestamps of the last transaction that have written X.
+\begin{description}
+    \item[Basic Timestamp Ordering:] if a transaction tries to write an item with a smaller (read or write) timestamp or tries to read an item with a smaller write timestamp, abort the transaction and rollback all the transactions that have used an item written by the aborted transaction, and rollback the transactions that have used an item written by the rollbacked transactions etc. (cascading rollback). Give a new timestamp when the transaction is restarted (not like in wait-die and wound-wait).
+    \item[Strict Timestamp Ordering:] if read\_item(X) or write\_item(X) called: if TS(T) $>$ write\_TS(X) then wait until T' (the transaction that have written X) terminates. If write\_item(X) called:
+    \begin{itemize}
+        \item if read\_TS(X) $>$ TS(T): abort T.
+        \item if write\_TS(X) $>$ TS(T): don't abort T but jump the write operation. (Remark that any conflict would have been avoided thanks to the first condition). 
+        \item otherwise execute the write operation and set write\_TS(X) to TS(T).
+    \end{itemize} 
+\end{description}
+
+\section{Multiversion Concurrency Control Techniques}
+Keep copies of the old values of a data item when the item is written. The read operations can read an older version of an item instead of being rejected. This maintains serializability.
+
+\subsection{Multiversion Technique Based on Timestamp Ordering}
+Each version $X_i$ of an item keeps 2 timestamps: read\_TS($X_i$) and write\_TS($X_i$). Rules to ensure serializability: find the version i of X that has the highest write\_TS($X_i$) of all versions of X that is also less than or equal to TS(T), then
+\begin{itemize}
+    \item write operation: aborted if read\_TS($X_i$) $>$ TS(T) (because another transaction that should read after the write of T has already read this version). 
+    \item read operation: return the value of $X_i$ and set read\_TS($X_i$) to the highest timestamp between TS(T) and the existing one.
+\end{itemize}
+
+\subsection{Multiversion Two-Phase Locking Using Certify Locks}
+4 states: read-locked, write-locked, certify-locked, or unlocked.\\
+
+The idea behind multiversion 2PL is to allow other transactions T' to read an item X while a single transaction T holds a write lock on X (which is not possible in the other schemes). A local version X' of an item is created each time a transaction acquires a write lock on X. Other transactions can continue to read the commited version of X. Once T is ready to commit its local version, it must obtain a certify lock on all items that it currently holds write locks on before it can commit. The certify lock is not compatible with read locks.
+
+\section{Validation (Optimistic) Techniques and Snapshot Isolation Concurrency Control}
+\subsection{Validation-Based (Optimistic) Concurrency Control}
+No checking is done while the transaction is executing, so there is less overhead during execution. During transaction execution, all updates are applied to local copies of the data items. At the end, a validation phase checks whether any of the transaction’s updates violate serializability (all checks are done during this phase). Optimistic because it assumes that little interference will occur.\\
+
+The validation phase for Ti checks that, for each such transaction Tj that is recently committed or in its validation phase, one of the following conditions holds to validate the transaction:
+\begin{itemize}
+    \item Tj completes its write phase before Ti starts its read phase.
+    \item Ti starts its write phase after Tj completes its write phase, and the read\_set of Ti (the set of items it reads) has no items in common with the write\_set of Tj.
+    \item The read\_set and write\_set of Ti have no item in common with the write\_set of Tj, and Tj completes its read phase before Ti completes its read phase.
+\end{itemize}
+
+\subsection{Concurrency Control Based on Snapshot Isolation}
+The database transaction only sees the records that were committed in the database at the time the transaction started. Certain anomalies that violate serializability can occur when snapshot isolation is used as the basis for concurrency control. They are difficult to detect but rare (outside the scope of this book) so they have to be checked by the developer, not the DBMS.\\
+
+Write locks are required but not read locks (better performance than 2PL if many reads).\\
+
+To read the correct version of the item (so the version before the transaction started), keep the versions in a temporary version store with timestamps of when the version was created.
+
+\section{Granularity of Data Items and Multiple Granularity Locking}
+Granularity of the data items: what portion of the database a data item represents (field $<$ record $<$ disk block $<$ file $<$ whole database).
+
+\subsection{Granularity Level Considerations for Locking}
+The larger the data item size is, the lower the degree of concurrency is permitted: locking a whole disk block results in more conflicting transactions. Smaller data item size results in more locks and more locking operations performed.
+
+\subsection{Multiple Granularity Level Locking}
+Support multiple levels of granularity because the best granularity size depends on the given transaction. A transaction can choose the level to lock (a file, a record,...). A hierarchy tree is used to check if an item is locked: if transaction T1 is locking a whole file and T2 wants to lock a record in this file it has to traverse the tree to know if this record is locked.
+
+Additional locks (from S (read/shared) and X (write/exclusive), intention locks, are needed:
+\begin{description}
+    \item[Intention-shared (IS)] indicates that read locks (shared locks) will be requested on some descendant nodes.
+    \item[Intention-exclusive (IX)] indicates that write locks (exclusive locks) will be requested on some descendant nodes.
+    \item[Shared-intention-exclusive (SIX)] indicates that the current node is locked in shared mode but that one or more exclusive locks will be requested on some descendant nodes.
+\end{description}
+
+Rules:
+\begin{itemize}
+    \item The root of the tree must be locked first, in any mode.
+    \item A node N can be locked by a transaction T in S or IS mode only if the parent of node N is already locked by transaction T in either IS or IX mode.
+    \item A node N can be locked by a transaction T in X, IX, or SIX mode only if the parent of node N is already locked by transaction T in either IX or SIX mode.
+    \item A transaction T can lock a node only if it has not unlocked any node (to enforce the 2PL protocol).
+    \item A transaction T can unlock a node N, only if none of the children of node N are currently locked by T.
+\end{itemize}
+
+So locking starts from the root to the node to be locked, unlocking starts from the locked node to the root.
+
+\section{Other Concurrency Control Issues}
+\subsection{Insertion, Deletion, and Phantom Records}
+\textbf{Phantom record}. An example is better than long explanations:\\
+Suppose that transaction T is inserting a new EMPLOYEE record whose Dno=5, whereas transaction T' is accessing all EMPLOYEE records whose Dno = 5 (for example to add up their salaries). Depending on the order of T and T', the new employee is included in the sum or not. But there is no real conflict because the record doesn't exist, so it can't be locked first (this problems occurs with insertion, not update).\\
+Solution to the phantom record problem: use index locking or use predicate locking (lock access to all records that satisfy an arbitrary predicate).
+
+\section{Summary}
+The strict and rigorous variations are more common because of their better recoverability properties.\\
+
+Locking can guarantee serializability when used in conjunction with the two-phase locking rule.\\
+
+The timestamp ordering protocol ensures serializability based on the order of transaction timestamps.\\
+
+Multiversion two-phase locking assumes that two versions can exist for an item and attempts to increase concurrency by making write and read locks compatible (at the cost of introducing an additional certify lock mode).\\
+
+Snapshot isolation is used to lower overhead. The basic snapshot isolation method can allow nonserializable schedules in rare cases because of certain anomalies that are difficult to detect.\\
+
+Multigranularity locking protocol allows the change of granularity (item size) based on the current transaction mix, with the goal of improving the performance of concurrency control.

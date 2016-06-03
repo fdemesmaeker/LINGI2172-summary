@@ -1,0 +1,127 @@
+\documentclass{report}
+\usepackage[utf8]{inputenc}
+\usepackage{float}
+\usepackage[]{amsmath}
+\usepackage{hyperref}
+\usepackage[margin=2cm]{geometry}
+
+%\title{LINGI2172 Databases Summary}
+%\author{Thomas Bollen \\ Florian Demesmaeker \\ Victor Deplasse \\ Romain Henneton \\ Guillaume Leurquin \\ Aurélien Pignolet}
+%\date{May 2016}
+
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{mathtools}
+\usepackage{subcaption}
+\DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
+\graphicspath{{img/}}
+
+\begin{document}
+
+%\maketitle
+
+%--------------------------------------------------------------------------
+%	TITLE PAGE
+%--------------------------------------------------------------------------
+\begin{titlepage}
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}} % Defines a new command for the horizontal lines, change thickness here
+\centering % Center everything on the page
+ 
+%	HEADING SECTIONS
+\null
+\vspace{1cm}
+\textsc{\large \'Ecole Polytechnique de Louvain}\\[3cm] % Name of your university/college
+\textsc{\Large LINGI2172 Databases}\\[2cm] 
+
+%	TITLE SECTION
+
+{ \LARGE \bfseries Summary of the course} \\[0.4cm]
+{ \normalsize This summary is highly based on Elmasri and Navathe book\footnote{Fundamentals of Database Systems 7th edition by R. Elmasri and S.B. Navathe, Pearson, 2016}\\ and on the course slides by M. Bernard Lambeau} \\[0.4cm]
+
+\begin{figure}[h!]
+\centering
+%\includegraphics[scale=0.7]{front.jpg}
+\end{figure}
+
+%	AUTHOR SECTION
+
+{\large Thomas Bollen \\ Florian Demesmaeker \\ Victor Deplasse \\ Romain Henneton \\ Guillaume Leurquin \\ Aurélien Pignolet }
+
+\vfill
+
+%	DATE SECTION
+
+{\normalsize May 2016}%\\[1cm] % Date, change the \today to a set date if you want to be precise
+\vspace{2cm}
+
+\newpage
+
+\end{titlepage}
+\setcounter{page}{1}
+
+\tableofcontents
+
+\chapter{Databases and Database Users (Chapter 1)}
+
+\include{chapters/chapter01}
+
+\chapter{Database System Concepts and Architecture (Chapter 2)}
+
+\include{chapters/chapter02}
+
+\chapter{Data Modeling Using the Entity–Relationship (ER) Model (Chapter 3)}  
+
+\include{chapters/chapter03}
+
+\chapter{The Enhanced Entity-Relation (EER) Model (Chapter 4)}
+
+\include{chapters/chapter04}
+
+\chapter{Basic SQL (Chapter 6)}
+\include{chapters/chapter06}
+
+\chapter{More SQL: Complex Queries, Triggers, Views, and Schema Modification (Chapter 7)}
+\include{chapters/chapter07}
+
+
+\chapter{Basics of Functional Dependencies and Normalization for Relational Databases (Chapter 14)}
+\include{chapters/chapter14}
+
+\chapter{Disk Storage, Basic File Structures, Hashing, and Modern Storage Architectures (Chapter 16)}
+\include{chapters/chapter16}
+
+\chapter{Indexing Structures for Files and Physical Database Design (Chapter 17)}
+\include{chapters/chapter17}
+
+\chapter{Strategies for Query Processing (Chapter 18)}
+\include{chapters/chapter18}
+
+\chapter{Query Optimization (Chapter 19)}
+\include{chapters/chapter19}
+
+\chapter{Introduction to Transaction Processing Concepts and Theory (Chapter 20)}
+\include{chapters/chapter20}
+
+\chapter{Concurrency Control Techniques (Chapter 21)}
+\label{chap-concurrency-control}
+\include{chapters/chapter21}
+
+\chapter{Database Recovery Techniques (Chapter 22)}
+\include{chapters/chapter22}
+
+\end{document}
+
+
+%                                                    7th edition    
+% S1 Introduction							    		1+2         (Thomas)
+% S5 SQL							    			    6			(Aurélien)			
+% S6 Constraints and Updating							6           (Aurélien)
+% S7 Database Design: Normal Forms 			            14+15       (Romain)
+% S9 Database Design: ER and transfo rules			    3+4         (Guillaume + Thomas)
+% S9 Views, Triggers, Database Programming				7           (Aurélien)
+% S10 Transactions							            20          (Florian) --> Done
+% S11 Concurrency Control & Recovery					21+22       (Victor + Florian) --> Done
+% S12 Disk & Indexing									16+17       (Flo 16, Guillaume 17)
+% S13 Query Planning & Optimization						18+19       (Guillaume 18, Thomas 19)
+
+% Manque: 15, 19
