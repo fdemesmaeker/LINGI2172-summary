@@ -20,12 +20,12 @@ Different problems may occur if no concurrency control is used.
 
 \begin{itemize}
     \item \textbf{The Lost Update Problem}. It occurs when two transactions accessing the same DB items have their operations interleaved such that the value of some DB items becomes incorrect. For instance $T_1$ changes the value of X and $T_2$ (that must occur after $T_1$) reads this value. If an interleaving yields a read of X by $T_2$ before $T_1$ has changed X, $T_2$ reads an incorrect value.
-    
+
     \item \textbf{The Dirty Read Problem}. It occurs when $T_1$ updates X and then $T_1$ fails. Meanwhile, X is accessed by $T_2$ \textbf{before} X is rolled back because of the failure. $T_2$ then reads a \textit{dirty data}.
-    
+
     \item \textbf{The incorrect Summary Problem}. It occurs when $T_1$ is calculating an aggregate summary function on a number of DB items while $T_2$ is updating some of these items. Wrong values are then aggregated by $T_1$.
-    
-    \item \textbf{The Unrepeatable Read Problem}. It occurs when $T_1$ reads two times a DB item X and $T_2$ updates the value of X between the two reads. 
+
+    \item \textbf{The Unrepeatable Read Problem}. It occurs when $T_1$ reads two times a DB item X and $T_2$ updates the value of X between the two reads.
 \end{itemize}
 
 \subsection{Why Recovery is Needed}
@@ -59,10 +59,10 @@ The log is a sequential, append-only file kept on disk to keep track of all tran
 
 \begin{itemize}
     \item \textbf{[start\_transaction, $T$]}. $T$ has started execution
-    \item \textbf{write\_item, $T$, $X$, old\_value, new\_value}. $T$ has changed the value of $X$ from old\_value to new\_value.
-    \item \textbf{read\_item, $T$, $X$}. $T$ has read the value of $X$.
-    \item \textbf{commit, $T$}. $T$ has completed successfully and affirms that its effect can be committed to the DB.
-    \item \textbf{abort, $T$}. $T$ has been aborted.
+    \item \textbf{[write\_item, $T$, $X$, old\_value, new\_value]}. $T$ has changed the value of $X$ from old\_value to new\_value.
+    \item \textbf{[read\_item, $T$, $X$]}. $T$ has read the value of $X$.
+    \item \textbf{[commit, $T$]}. $T$ has completed successfully and affirms that its effect can be committed to the DB.
+    \item \textbf{[abort, $T$]}. $T$ has been aborted.
 \end{itemize}
 
 A transaction $T$ reaches its \textbf{commit point} when all its operations have been executed successfully and the effect of these operations have been recorded in the log.
@@ -84,7 +84,7 @@ Transactions should possess the ACID properties~:
     \item \textbf{Atomicity}. A transaction is atomic. Enforced by the \textit{transaction recovery subsystem}.
     \item \textbf{Consistency preservation}. It should takes the DB from one consistent state to another. The programmer is responsible for this.
     \item \textbf{Isolation}. Its execution should not interfer with other transactions executing concurrently. Enforced by the \textit{concurrency control subsystem}.
-    \item \textbf{Durability}. Its changes to the DB must persist and must not be lost because of any failure. Enforced bu the \textit{recovery subsystem} of the DBMS.
+    \item \textbf{Durability}. Its changes to the DB must persist and must not be lost because of any failure. Enforced by the \textit{recovery subsystem} of the DBMS.
 \end{itemize}
 
 \subsection{Levels of Isolation}
@@ -114,7 +114,7 @@ A schedule $S$ is said to be a \textbf{complete schedule} if all three of the fo
     \item[2.] For any pair of operations from the same $T_i$, their relative order of appearance in $S$ is the same as their order of appearance in $T_i$.
     \item[3.] For any two conflicting operations, one of the two must occur before the other in the schedule.
 \end{itemize}
-Condition 2 and 3 enforce a \textbf{total order} for any pair of conflicting operations and for any pair of operations from the same $T_i$ respectively. Nothing is required on non-conflicting operations not in the same transaction and so they follow a \textbf{partial order}.
+Conditions 2 and 3 enforce a \textbf{total order} for any pair of conflicting operations and for any pair of operations from the same $T_i$ respectively. Nothing is required on non-conflicting operations not in the same transaction and so they follow a \textbf{partial order}.
 
 \subsection{Characterizing Schedules Based on Recoverability}
 A schedule $S$ is \textbf{recoverable} if no transaction $T$ in $S$ commits until all transactions $T'$ that have written some item $X$ that $T$ reads have committed. We said that $T$ reads from $T'$ if $X$ is first written by $T'$ and later read by $T$. \\
@@ -152,7 +152,7 @@ Two schedules $S_1$ and $S_2$ are \textbf{result equivalent} if they produce the
 
 
 \subsection{Testing for Conflict Serializability of a Schedule}
-There is a simple algorithm for determining wether a particular schedule is conflict serializable or not. However most concurrency control methods do \textit{not} test for conflict serializability. But this algorithm helps to understand the chapter on concurrency control protocols.\\
+There is a simple algorithm for determining wether a particular schedule is conflict serializable or not. However most concurrency control methods do \textbf{not} test for conflict serializability. But this algorithm helps to understand the chapter on concurrency control protocols.\\
 
 The algorithm constructs a \textbf{precedence graph} which is a directed graph $G=(N,E)$ where $N = \{T_1,\dots,T_n\}$ is the set of nodes and $E=\{e_1,\dots,e_m\}$ is the set of directed edges. \\
 
@@ -182,7 +182,7 @@ The idea is that as long as each \texttt{read} operation reads the result of the
 
 A schedule $S$ is \textbf{view serializable} if it is view equivalent to a \textit{serial} schedule. \\
 
-Any conflict-serializable schedule is also view serializable. However, if there is no \textbf{blind write} both definition become equivalent. A \textbf{blind write} is a write operation in a transaction $T$ on an item $X$ that is not dependent on the old value of $X$, i.e. it is not preceded by a read of $X$ in $T$. For instance schedule $S_g$ defined below, $w_2(X)$ and $w_3(X)$ are blind writes.
+Any conflict-serializable schedule is also view serializable. However, if there is no \textbf{blind write} both definitions become equivalent. A \textbf{blind write} is a write operation in a transaction $T$ on an item $X$ that is not dependent on the old value of $X$, i.e. it is not preceded by a read of $X$ in $T$. For instance schedule $S_g$ defined below, $w_2(X)$ and $w_3(X)$ are blind writes.
 
 $$S_g: r_1(X); w2_(X); w_1(X); w_3(X); c1; c2; c3;$$
 
